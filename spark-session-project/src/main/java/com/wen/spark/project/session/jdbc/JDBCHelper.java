@@ -1,5 +1,6 @@
 package com.wen.spark.project.session.jdbc;
 
+import com.wen.spark.project.session.Exception.SessionFactoryException;
 import com.wen.spark.project.session.conf.ConfigurationManager;
 import com.wen.spark.project.session.conf.Constants;
 import com.wen.spark.project.session.util.GetValueUtils;
@@ -52,7 +53,9 @@ public class JDBCHelper {
         return instance;
     }
 
-
+    /**
+     * 构造方法加载连接池
+     */
     private JDBCHelper() {
         int datasourceSize = GetValueUtils.getIntegerOrElse(ConfigurationManager.getProperty(Constants.JDBC.JDBC_DATASOURCE_SIZE), 1);
         try {
@@ -99,30 +102,72 @@ public class JDBCHelper {
         }
     }
 
+    /**
+     * 归还数据库连接
+     * @param connection
+     */
     public synchronized void BackConnection(Connection connection) {
         datasource.add(connection);
+        connection=null;
+    }
+
+
+    /**
+     * 执行增删改SQL语句
+     * 自动事务执行 执行update
+     * @param sql
+     * @return 影响的行数
+     */
+    public int executeUpdate(String sql, Object[] params) {
+        int rtn=0;
+        Connection connection=getConnection();
+        try {
+            PreparedStatement  pstmt =getPrepareStatementSql(connection,sql,params);
+            rtn = pstmt.executeUpdate();
+        }catch (SQLException e){
+            e.printStackTrace();
+        }finally {
+            BackConnection(connection);
+        }
+        return rtn;
     }
 
     /**
      * 执行增删改SQL语句
-     *
+     * 手动事务执行 执行update
      * @param sql
      * @return 影响的行数
      */
-    public int executeUpdate(PreparedStatement pstmt) throws SQLException{
+    public int executeUpdate(Connection connection,String sql, Object[] params) {
         int rtn=0;
-        rtn = pstmt.executeUpdate();
+        try {
+            PreparedStatement  pstmt =getPrepareStatementSql(connection,sql,params);
+            rtn = pstmt.executeUpdate();
+        }catch (SQLException e){
+            e.printStackTrace();
+            throw new SessionFactoryException(e.getMessage());
+        }
         return rtn;
     }
 
     /**
      * 执行查询SQL语句
-     *
+     * 自动事务检索
      * @param sql
      * @param params
      */
-    public ResultSet executeQuery(PreparedStatement pstmt) throws SQLException {
-        return pstmt.executeQuery();
+    public ResultSet executeQuery(String sql, Object[] params){
+        Connection connection=getConnection();
+        ResultSet rs=null;
+        try {
+            PreparedStatement  pstmt =getPrepareStatementSql(connection,sql,params);
+             rs=pstmt.executeQuery();
+        }catch (SQLException e){
+            e.printStackTrace();
+        }finally {
+            BackConnection(connection);
+        }
+        return rs;
     }
 
     /**
@@ -130,43 +175,16 @@ public class JDBCHelper {
      * @param connection
      * @param sql
      * @param params
-     * @return
+     * @return 带事务的编译
      * @throws SQLException
      */
-    public PreparedStatement getPrepareStatementSql(Connection connection,String sql, Object[] params)throws SQLException{
+    private PreparedStatement getPrepareStatementSql(Connection connection,String sql, Object[] params)throws SQLException{
         PreparedStatement  pstmt = connection.prepareStatement(sql);
         if(params!=null&&params.length>0){
             for (int i = 0; i < params.length; i++) {
                 pstmt.setObject(i + 1, params[i]);
             }
         }
-        return pstmt;
-    }
-
-    /**
-     * 不需要处理事务
-      * @param sql
-     * @param params
-     * @return
-     * @throws SQLException
-     */
-
-    public PreparedStatement getPrepareStatementSql(String sql, Object[] params)throws SQLException{
-        Connection connection=getConnection();
-        PreparedStatement  pstmt=null;
-       try {
-            pstmt = connection.prepareStatement(sql);
-            if(params!=null&&params.length>0){
-                for (int i = 0; i < params.length; i++) {
-                   pstmt.setObject(i + 1, params[i]);
-               }
-           }
-
-       }catch (Exception e){
-            e.printStackTrace();
-       }finally {
-           BackConnection(connection);
-       }
         return pstmt;
     }
 

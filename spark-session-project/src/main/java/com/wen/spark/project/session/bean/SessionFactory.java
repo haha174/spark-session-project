@@ -5,7 +5,6 @@ import com.wen.spark.project.session.Exception.SessionFactoryException;
 import com.wen.spark.project.session.jdbc.JDBCHelper;
 import com.wen.spark.project.session.util.BeanUtil;
 
-import javax.management.Query;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,16 +12,38 @@ import java.util.List;
 import java.util.Map;
 
 public class SessionFactory {
+    /**
+     * 连接信息
+     */
     private Connection connection;
+    /**
+     * 标注当前是否是手动事务的还是自动事务的
+     */
+    private boolean transaction=false;
     /**
      * 获得对象
      */
-    private JDBCHelper jdbcHelper = JDBCHelper.getInstance();
+    private static JDBCHelper jdbcHelper = JDBCHelper.getInstance();
 
-    public SessionFactory() {
-        this.connection = jdbcHelper.getConnection();
+    private SessionFactory(Connection connection,boolean transaction) {
+        this.connection = connection;
+        this.transaction = transaction;
+    }
+    private SessionFactory(){}
+
+    public static SessionFactory getSessionFactory() {
+        return new SessionFactory(null,false);
     }
 
+    /**
+     * 注意 当取得手动事务的session  需要手动去提交事务  和close   sessionFactory  不然会导致 增删改失败和丢失连接数
+     * @return
+     */
+    public static SessionFactory getTransactionSessionFactory() {
+        SessionFactory sessionFactory= new SessionFactory(jdbcHelper.getConnection(),true);
+        sessionFactory.setAutoCommit(false);
+        return sessionFactory;
+    }
     /**
      * 提交事务
      *
@@ -58,7 +79,7 @@ public class SessionFactory {
      *
      * @return
      */
-    public boolean rollback(boolean flag) {
+    public boolean setAutoCommit(boolean flag) {
         try {
             connection.setAutoCommit(flag);
             return true;
@@ -69,20 +90,33 @@ public class SessionFactory {
     }
 
     /**
+     * 增删改方法
+     * @param sql
+     * @param params
+     * @return
+     */
+
+    public int executeUpdate(String sql, Object[] params) {
+        if(transaction==transaction){
+           return jdbcHelper.executeUpdate(connection,sql,params);
+        }else{
+            return jdbcHelper.executeUpdate(sql,params);
+        }
+    }
+    /**
      * @param sql
      * @param params
      * @return
      */
     public Map<String, Object> queryForMap(String sql, Object[] params) {
         try {
-            ResultSet set = jdbcHelper.executeQuery(jdbcHelper.getPrepareStatementSql(connection, sql, params));
+            ResultSet set = jdbcHelper.executeQuery( sql,  params);
             List<Map<String, Object>> list = ResultSetToMap(set);
             if (list != null && list.size() > 0) {
                 return list.get(0);
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            throw new SessionFactoryException(e.getMessage());
         }
         return null;
     }
@@ -95,7 +129,11 @@ public class SessionFactory {
         return queryForMap(sql, null);
     }
 
-
+    /**
+     * 返回一个map  形式的查找结果
+     * @param rs
+     * @return
+     */
     private List<Map<String, Object>> ResultSetToMap(ResultSet rs) {
         try {
             ResultSetMetaData rsmd = rs.getMetaData();
@@ -124,7 +162,14 @@ public class SessionFactory {
         return queryForObject(sql, null, clazz);
     }
 
-
+    /**
+     * 返回一个对象形式的查找结果
+     * @param sql
+     * @param params
+     * @param clazz
+     * @param <T>
+     * @return
+     */
     public <T> T queryForObject(String sql, Object[] params, Class<T> clazz) {
         Map<String, Object> map = queryForMap(sql, params);
         if (null != map) {
@@ -144,7 +189,7 @@ public class SessionFactory {
 
     public <T> List<T> queryForList(String sql, Object[] params, Class<T> clazz) {
         try {
-            ResultSet set = jdbcHelper.executeQuery(jdbcHelper.getPrepareStatementSql(connection, sql, params));
+            ResultSet set = jdbcHelper.executeQuery( sql,  params);
             List<Map<String, Object>> list = ResultSetToMap(set);
             return mapsToObjects(list, clazz);
         } catch (Exception e) {
@@ -170,12 +215,12 @@ public class SessionFactory {
      */
     public String queryForString(String sql, Object[] params) {
         try {
-            ResultSet set = jdbcHelper.executeQuery(jdbcHelper.getPrepareStatementSql(connection, sql, params));
+            ResultSet set = jdbcHelper.executeQuery( sql,  params);
             List<Map<String, Object>> list = ResultSetToMap(set);
             if (list != null && list.size() > 0) {
                 return com.alibaba.fastjson.JSON.toJSONString(list.get(0));
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             throw new SessionFactoryException(e.getMessage());
         }
