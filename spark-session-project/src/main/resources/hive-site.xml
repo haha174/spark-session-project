@@ -1,0 +1,41 @@
+<configuration>
+  <property>
+    <name>hive.exec.scratchdir</name>
+    <value>hdfs://cloud.codeguoj.cn:8020/user/hive/tmp</value>
+  </property>
+  <property>
+    <name>hive.metastore.warehouse.dir</name>
+    <value>hdfs://cloud.codeguoj.cn:8020/user/hive/warehouse</value>
+  </property>
+  <property>
+    <name>hive.querylog.location</name>
+    <value>hdfs://cloud.codeguoj.cn:8020/user/hive/log</value>
+  </property>
+  <property>
+    <name>hive.metastore.uris</name>
+    <value>thrift://cloud.codeguoj.cn:9083</value>
+  </property>
+
+  <property>
+    <name>javax.jdo.option.ConnectionURL</name>
+    <value>jdbc:mysql://www.haha174.top:3306/hive_metadata?createDatabaseIfNotExist=true&amp;characterEncoding=UTF-8&amp;useSSL=false</value>
+  </property>
+  <property>
+    <name>javax.jdo.option.ConnectionDriverName</name>
+    <value>com.mysql.jdbc.Driver</value>
+  </property>
+  <property>
+    <name>javax.jdo.option.ConnectionUserName</name>
+    <value>hive</value>
+  </property>
+  <property>
+    <name>javax.jdo.option.ConnectionPassword</name>
+    <value>hive</value>
+  </property>
+
+
+  <property>
+    <name>temp.line.record.delimiter</name>
+    <value>\002</value>
+  </property>
+</configuration>
