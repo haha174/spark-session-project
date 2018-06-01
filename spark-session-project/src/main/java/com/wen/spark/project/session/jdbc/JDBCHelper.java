@@ -1,6 +1,6 @@
 package com.wen.spark.project.session.jdbc;
 
-import com.wen.spark.project.session.Exception.SessionFactoryException;
+import com.wen.spark.project.session.Exception.JDBCException;
 import com.wen.spark.project.session.conf.ConfigurationManager;
 import com.wen.spark.project.session.conf.Constants;
 import com.wen.spark.project.session.util.GetValueUtils;
@@ -126,6 +126,7 @@ public class JDBCHelper {
             rtn = pstmt.executeUpdate();
         }catch (SQLException e){
             e.printStackTrace();
+            throw new JDBCException(e.getMessage(),e.getCause());
         }finally {
             BackConnection(connection);
         }
@@ -145,7 +146,7 @@ public class JDBCHelper {
             rtn = pstmt.executeUpdate();
         }catch (SQLException e){
             e.printStackTrace();
-            throw new SessionFactoryException(e.getMessage());
+            throw new JDBCException(e.getMessage(),e.getCause());
         }
         return rtn;
     }

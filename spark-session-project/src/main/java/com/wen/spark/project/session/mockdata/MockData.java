@@ -1,22 +1,20 @@
-package com.ibeifeng.sparkproject.test;
+package com.wen.spark.project.session.mockdata;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
+import com.alibaba.fastjson.JSON;
+import com.wen.spark.project.session.bean.SessionFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
+import com.wen.spark.project.session.util.DateUtils;
 
-import com.ibeifeng.sparkproject.util.DateUtils;
-import com.ibeifeng.sparkproject.util.StringUtils;
 
 /**
  * 模拟数据程序
@@ -32,11 +30,14 @@ public class MockData {
 	 */
 	public static void mock(JavaSparkContext sc,
 			SQLContext sqlContext) {
+
+
+
 		List<Row> rows = new ArrayList<Row>();
 		
 		String[] searchKeywords = new String[] {"火锅", "蛋糕", "重庆辣子鸡", "重庆小面",
 				"呷哺呷哺", "新辣道鱼火锅", "国贸大厦", "太古商场", "日本料理", "温泉"};
-		String date = DateUtils.getTodayDate();
+		String date = DateUtils.dateToString(DateUtils.getNowDate());
 		String[] actions = new String[]{"search", "click", "order", "pay"};
 		Random random = new Random();
 		
@@ -45,11 +46,11 @@ public class MockData {
 			
 			for(int j = 0; j < 10; j++) {
 				String sessionid = UUID.randomUUID().toString().replace("-", "");  
-				String baseActionTime = date + " " + random.nextInt(23);
+				String baseActionTime = date + " " +  DateUtils.fullZero(random.nextInt(23));
 				  
 				for(int k = 0; k < random.nextInt(100); k++) {
 					long pageid = random.nextInt(10);    
-					String actionTime = baseActionTime + ":" + StringUtils.fulfuill(String.valueOf(random.nextInt(59))) + ":" + StringUtils.fulfuill(String.valueOf(random.nextInt(59)));
+					String actionTime = baseActionTime + ":" + DateUtils.fullZero(random.nextInt(59)) + ":" +  DateUtils.fullZero(random.nextInt(59));
 					String searchKeyword = null;
 					Long clickCategoryId = null;
 					Long clickProductId = null;
@@ -98,12 +99,14 @@ public class MockData {
 				DataTypes.createStructField("pay_category_ids", DataTypes.StringType, true),
 				DataTypes.createStructField("pay_product_ids", DataTypes.StringType, true)));
 		
-		DataFrame df = sqlContext.createDataFrame(rowsRDD, schema);
+		Dataset df = sqlContext.createDataFrame(rowsRDD, schema);
 		
-		df.registerTempTable("user_visit_action");  
-		for(Row _row : df.take(1)) {
-			System.out.println(_row);  
-		}
+		df.registerTempTable("user_visit_action");
+        df.show();
+        for(Row row:(Row[])df.take(1)){
+            System.out.println(row);
+        }
+
 		
 		/**
 		 * ==================================================================
@@ -136,12 +139,13 @@ public class MockData {
 				DataTypes.createStructField("city", DataTypes.StringType, true),
 				DataTypes.createStructField("sex", DataTypes.StringType, true)));
 		
-		DataFrame df2 = sqlContext.createDataFrame(rowsRDD, schema2);
-		for(Row _row : df2.take(1)) {
-			System.out.println(_row);  
-		}
-		
-		df2.registerTempTable("user_info");  
+		Dataset df2 = sqlContext.createDataFrame(rowsRDD, schema2);
+        df.show();
+        for(Row row:(Row[])df.take(1)){
+            System.out.println(row);
+        }
+
+        df2.registerTempTable("user_info");
 	}
 	
 }

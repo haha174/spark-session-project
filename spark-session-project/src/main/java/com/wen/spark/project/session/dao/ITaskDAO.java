@@ -1,11 +1,10 @@
-package com.ibeifeng.sparkproject.dao;
+package com.wen.spark.project.session.dao;
 
-import com.ibeifeng.sparkproject.domain.Task;
+import com.wen.spark.project.session.entrty.Task;
 
 /**
- * 任务管理DAO接口
- * @author Administrator
- *
+ * @author WChen129
+ * @date 2018-05-24
  */
 public interface ITaskDAO {
 	

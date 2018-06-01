@@ -1,7 +1,9 @@
 package com.wen.spark.project.session.util;
 
+import com.wen.spark.project.session.annotation.FieldName;
 import org.apache.commons.lang3.StringUtils;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Map;
@@ -45,7 +47,15 @@ public class BeanUtil {
                     continue;
                 }
                 field.setAccessible(true);
-                field.set(instance, map.get(field.getName()));
+                String fieldName=field.getName();
+                FieldName fieldNameAnnotation=field.getAnnotation(FieldName.class);
+                if(fieldNameAnnotation!=null){
+                    fieldName=fieldNameAnnotation.value();
+                }
+                if(map.containsKey(fieldName)){
+                    field.set(instance, map.get(fieldName));
+                }
+                field.setAccessible(false);
             }
         } catch (Exception e) {
             e.printStackTrace();

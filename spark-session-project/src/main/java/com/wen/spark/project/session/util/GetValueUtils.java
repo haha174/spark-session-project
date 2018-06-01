@@ -2,6 +2,9 @@ package com.wen.spark.project.session.util;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Date;
+import java.util.Random;
+
 public class GetValueUtils {
     /**
      * getString if null or eror   return defaultValue
@@ -89,5 +92,62 @@ public class GetValueUtils {
         } catch (Exception e) {
             return defaultValue;
         }
+    }
+
+    /**
+     * getBoolean
+     * @param value
+     * @param flag
+     * @return
+     */
+    public static boolean getBooleanOrElse(Object value,boolean flag){
+        if(value==null){
+            return flag;
+        }else{
+            try {
+                return Boolean.parseBoolean((String) value);
+            } catch (Exception e) {
+                return flag;
+            }
+        }
+    }
+
+    /**
+     * 默认返回值为false
+     * @param value
+     * @return
+     */
+    public static boolean getBoolean(Object value){
+       return getBooleanOrElse(value,false);
+    }
+    /**
+     * get randoom uuid  long
+     */
+    public static long getUUID(int num){
+        if(num==0){
+            return 0L;
+        }
+        StringBuffer sb=new StringBuffer();
+        int[] arr={0,1,2,3,4,5,6,7,8,9};
+        int rand=(int)Math.random()*10;
+        while (arr[rand]==0){
+            rand=(int)(Math.random()*10);
+        }
+        for (int i=1;i<num;i++){
+            rand=(int)(Math.random()*10);
+            sb.append(arr[rand]);
+        }
+        return Long.parseLong(sb.toString());
+    }
+
+    /**
+     * get 16  uuid
+     * @return
+     */
+    public static long getUUID(){
+        return getUUID(16);
+    }
+    public static void main(String[] args) {
+        System.out.println(getUUID());
     }
 }

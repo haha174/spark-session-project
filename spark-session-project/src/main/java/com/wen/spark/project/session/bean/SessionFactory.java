@@ -97,7 +97,7 @@ public class SessionFactory {
      */
 
     public int executeUpdate(String sql, Object[] params) {
-        if(transaction==transaction){
+        if(transaction==true){
            return jdbcHelper.executeUpdate(connection,sql,params);
         }else{
             return jdbcHelper.executeUpdate(sql,params);
@@ -244,7 +244,10 @@ public class SessionFactory {
      * 关闭连接
      */
     public void close() {
-        JDBCHelper.getInstance().BackConnection(connection);
+        if(connection!=null){
+            JDBCHelper.getInstance().BackConnection(connection);
+        }
+        this.transaction=true;
         this.connection=null;
     }
 
