@@ -28,12 +28,19 @@ public interface Constants {
         public static final String FIELD_SESSION_ID="sessionid";
         public static final String PARAM_START_DATE="startDate";
         public static final String PARAM_END_DATE="endDate";
-
         public static final String FIELD_CITY="city";
         public static final String FIELD_SEX="spark_local";
-
         String FIELD_SEARCH_KEYWORDS = "searchKeywords";
         String FIELD_CLICK_CATEGORY_IDS = "clickCategoryIds";
+        String PARAM_SEX="sex";
+        String PARAM_KEYWORDS="keywords";
+        String PARAM_CITIES="cities";
+        String PARAM_PROFESSIONALS="professionals";
+        String PARAM_ENDAGE="endAge";
+        String PARAM_STARTAGE="startAge";
+        String PARAM_CATEGORY_IDS="categoryIds";
+
     }
+
 
 }
