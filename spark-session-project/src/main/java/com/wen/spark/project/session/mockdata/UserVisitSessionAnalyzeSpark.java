@@ -7,10 +7,7 @@ import com.wen.spark.project.session.conf.Constants;
 import com.wen.spark.project.session.dao.ITaskDAO;
 import com.wen.spark.project.session.entrty.Task;
 import com.wen.spark.project.session.factory.DAOFactory;
-import com.wen.spark.project.session.util.GetValueUtils;
-import com.wen.spark.project.session.util.ParamUtils;
-import com.wen.spark.project.session.util.StringUtils;
-import com.wen.spark.project.session.util.ValidUtils;
+import com.wen.spark.project.session.util.*;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -29,10 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Tuple2;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 
 /**
@@ -238,7 +232,11 @@ public class UserVisitSessionAnalyzeSpark {
                         StringBuffer clickCategoryIdsBuffer = new StringBuffer("");
 
                         Long userid = null;
-
+                       // session的起始和结束时间
+                        Date startTime = null;
+                        Date endTime = null;
+                        // session的访问步长
+                        int stepLength = 0;
                         // 遍历session所有的访问行为
                         while (iterator.hasNext()) {
                             // 提取每个访问行为的搜索词字段和点击品类字段
@@ -251,6 +249,25 @@ public class UserVisitSessionAnalyzeSpark {
                             if (row.get(6) != null) {
                                 clickCategoryId = row.getLong(6);
                             }
+
+                            // 计算session开始和结束时间
+                            Date actionTime = DateUtils.parseTime(row.getString(4));
+
+                            if(startTime == null) {
+                                startTime = actionTime;
+                            }
+                            if(endTime == null) {
+                                endTime = actionTime;
+                            }
+
+                            if(actionTime.before(startTime)) {
+                                startTime = actionTime;
+                            }
+                            if(actionTime.after(endTime)) {
+                                endTime = actionTime;
+                            }
+                            // 计算session访问步长
+                            stepLength++;
                             // 实际上这里要对数据说明一下
                             // 并不是每一行访问行为都有searchKeyword何clickCategoryId两个字段的
                             // 其实，只有搜索行为，是有searchKeyword字段的
@@ -274,9 +291,12 @@ public class UserVisitSessionAnalyzeSpark {
                             }
                         }
 
+
                         String searchKeywords = StringUtils.trimComma(searchKeywordsBuffer.toString());
                         String clickCategoryIds = StringUtils.trimComma(clickCategoryIdsBuffer.toString());
 
+                        // 计算session访问时长（秒）
+                        long visitLength = (endTime.getTime() - startTime.getTime()) / 1000;
                         // 我们返回的数据格式，即使<sessionid,partAggrInfo>
                         // 但是，这一步聚合完了以后，其实，我们是还需要将每一行数据，跟对应的用户信息进行聚合
                         // 问题就来了，如果是跟用户信息进行聚合的话，那么key，就不应该是sessionid
@@ -293,8 +313,9 @@ public class UserVisitSessionAnalyzeSpark {
                         // 我们这里统一定义，使用key=value|key=value
                         String partAggrInfo = Constants.SESSION_PROJECT.FIELD_SESSION_ID + "=" + sessionid + "|"
                                 + Constants.SESSION_PROJECT.FIELD_SEARCH_KEYWORDS + "=" + searchKeywords + "|"
-                                + Constants.SESSION_PROJECT.FIELD_CLICK_CATEGORY_IDS + "=" + clickCategoryIds;
-
+                                + Constants.SESSION_PROJECT.FIELD_CLICK_CATEGORY_IDS + "=" + clickCategoryIds
+                                + Constants.SESSION_PROJECT.FIELD_VISIT_LENGTH + "=" + visitLength + "|"
+                                + Constants.SESSION_PROJECT.FIELD_STEP_LENGTH + "=" + stepLength;
                         return new Tuple2<Long, String>(userid, partAggrInfo);
                     }
 

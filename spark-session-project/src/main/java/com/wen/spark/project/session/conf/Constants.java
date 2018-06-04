@@ -26,7 +26,9 @@ public interface Constants {
     }
     interface SESSION_PROJECT{
         String FIELD_SEX="spark_local";
-
+        String FIELD_VISIT_LENGTH = "visitLength";
+        String FIELD_STEP_LENGTH = "stepLength";
+        String FIELD_START_TIME = "starttime";
         String FIELD_SESSION_ID="sessionid";
          String PARAM_START_DATE="startDate";
          String PARAM_END_DATE="endDate";
