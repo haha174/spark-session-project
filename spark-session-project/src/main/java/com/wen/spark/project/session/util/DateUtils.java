@@ -1,26 +1,21 @@
 package com.wen.spark.project.session.util;
 
-/**
- * @author : WChen129
- * @date : 2018-06-04
- */
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.*;
 
 /**
- * 日期时间工具类
- * @author Administrator
- *
+ * @author : WChen129
+ * @date : 2018-05-25
  */
 public class DateUtils {
-
+    public final static String DATE_FORMAT = "yyyy-MM-dd";
+    public final static String yyyy_MM_dd_HHmmssSSS = "yyyy-MM-dd HH:mm:ss:SSS";
+    public final static String yyyy_MM_dd_HHmmss = "yyyy-MM-dd HH:mm:ss";
+    public final static String yyyy_MM_ddTHHmmss = "yyyy-MM-dd'T'HH:mm:ss";
     public static final SimpleDateFormat TIME_FORMAT =
             new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    public static final SimpleDateFormat DATE_FORMAT =
-            new SimpleDateFormat("yyyy-MM-dd");
+
 
     /**
      * 判断一个时间是否在另一个时间之前
@@ -94,36 +89,9 @@ public class DateUtils {
         return date + "_" + hour;
     }
 
-    /**
-     * 获取当天日期（yyyy-MM-dd）
-     * @return 当天日期
-     */
-    public static String getTodayDate() {
-        return DATE_FORMAT.format(new Date());
-    }
 
-    /**
-     * 获取昨天的日期（yyyy-MM-dd）
-     * @return 昨天的日期
-     */
-    public static String getYesterdayDate() {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(new Date());
-        cal.add(Calendar.DAY_OF_YEAR, -1);
 
-        Date date = cal.getTime();
 
-        return DATE_FORMAT.format(date);
-    }
-
-    /**
-     * 格式化日期（yyyy-MM-dd）
-     * @param date Date对象
-     * @return 格式化后的日期
-     */
-    public static String formatDate(Date date) {
-        return DATE_FORMAT.format(date);
-    }
 
     /**
      * 格式化时间（yyyy-MM-dd HH:mm:ss）
@@ -146,6 +114,66 @@ public class DateUtils {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static String dateToString(Date dt) {
+        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+        return sdf.format(dt);
+    }
+
+    public static String dateToString(Date dt, String format) {
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        return sdf.format(dt);
+    }
+
+
+    public static Date stringToDate(String dateStr, String format) {
+        return stringToDate(dateStr, format, Locale.getDefault());
+    }
+    public static Date stringToDate(String dateStr, String format, Locale locale) {
+        SimpleDateFormat sdf = new SimpleDateFormat(format, locale);
+        Date s_date = null;
+        try {
+            s_date = (Date) sdf.parse(dateStr);
+        } catch (ParseException e) {
+            s_date = correctDate(dateStr, format);
+        }
+        return s_date;
+    }
+    private static Date correctDate(String dateStr, String format) {
+        Map<String, Locale> set = new HashMap<String, Locale>();
+        set.put(DATE_FORMAT, Locale.CHINA);
+        set.put(yyyy_MM_dd_HHmmssSSS, Locale.CHINA);
+        set.put(yyyy_MM_dd_HHmmss, Locale.CHINA);
+        set.put(yyyy_MM_ddTHHmmss, Locale.CHINA);
+        set.remove(format);
+        for (Map.Entry<String, Locale> es : set.entrySet()) {
+            SimpleDateFormat sdf = new SimpleDateFormat(es.getKey(),
+                    es.getValue());
+
+            try {
+                Date s_date = sdf.parse(dateStr);
+                return s_date;
+            } catch (ParseException e) {
+            }
+        }
+        return null;
+    }
+    public static Date getNowDate(){
+        Calendar calendar = Calendar.getInstance();
+        return calendar.getTime();
+    }
+    public static long currentTimeMillis() {
+        return  System.currentTimeMillis();
+    }
+
+    public static String fullZero(int time){
+        if(time<10&&time>=0){
+            return "0"+time;
+        }else{
+            return time+"";
+        }
+
     }
 
 }
