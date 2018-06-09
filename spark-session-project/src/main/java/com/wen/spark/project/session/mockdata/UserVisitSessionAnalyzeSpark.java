@@ -1,6 +1,7 @@
 package com.wen.spark.project.session.mockdata;
 
 import com.alibaba.fastjson.JSON;
+import com.wen.spark.project.session.accumulator.SessionAggrStatAccumulator;
 import com.wen.spark.project.session.bean.SessionFactory;
 import com.wen.spark.project.session.conf.ConfigurationManager;
 import com.wen.spark.project.session.conf.Constants;
@@ -8,6 +9,7 @@ import com.wen.spark.project.session.dao.ITaskDAO;
 import com.wen.spark.project.session.entrty.Task;
 import com.wen.spark.project.session.factory.DAOFactory;
 import com.wen.spark.project.session.util.*;
+import org.apache.spark.Accumulator;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -100,7 +102,10 @@ public class UserVisitSessionAnalyzeSpark {
         // 然后就可以获取到session粒度的数据，同时呢，数据里面还包含了session对应的user的信息
         JavaPairRDD<String, String> sessionid2AggrInfoRDD =
                 aggregateBySession(sqlContext, actionRDD);
-        JavaPairRDD<String, String> fliterRDD= filterSession(sessionid2AggrInfoRDD,taskParam);
+        //重构同时进行过滤统计
+        Accumulator<String> sessionAggrStatAccumulator=sc.accumulator("",new SessionAggrStatAccumulator());
+
+        JavaPairRDD<String, String> fliterRDD= filterSessionAndAggrStat(sessionAggrStatAccumulator,sessionid2AggrInfoRDD,taskParam);
 
 //        fliterRDD.foreach(new VoidFunction<Tuple2<String, String>>() {
 //            @Override
@@ -378,11 +383,11 @@ public class UserVisitSessionAnalyzeSpark {
     }
 
     /**
-     * 对集合的session  进行过滤
+     * 对集合的session  进行过滤 并进行聚合统计
      * @param sessionid2AggrInfoRDD
      * @return
      */
-    private static JavaPairRDD<String, String> filterSession(
+    private static JavaPairRDD<String, String> filterSessionAndAggrStat(Accumulator<String> sessionAggrStatAccumulator,
             JavaPairRDD<String, String> sessionid2AggrInfoRDD,
             final JSONObject taskParam) {
         // 为了使用我们后面的ValieUtils，所以，首先将所有的筛选参数拼接成一个连接串
@@ -468,8 +473,71 @@ public class UserVisitSessionAnalyzeSpark {
                                 parameter, Constants.SESSION_PROJECT.PARAM_CATEGORY_IDS)) {
                             return false;
                         }
+                        //如果经过之前的多个过滤条件，程序能够走到这里
+                        //那么就说明，该session 是通过了用户指定的筛选条件的，也就是合法的数据
+                        //根据session  那么就要退session的访问时长和访问步长进行统计
+                        //根据session  的范围进行累加操作。
+                        sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.SESSION_COUNT );
+                        //  计算出访问时长和访问步长进行累加
 
+                        long visitLength=Long.parseLong (  StringUtils.getFieldFromConcatString ( aggrInfo,"\\|",Constants.SESSION_PROJECT.FIELD_VISIT_LENGTH ));
+                        long stepLength=Long.parseLong (  StringUtils.getFieldFromConcatString ( aggrInfo,"\\|",Constants.SESSION_PROJECT.FIELD_STEP_LENGTH));
                         return true;
+                    }
+
+                    /**
+                     * 计算访问时长
+                     * @param visitLength
+                     */
+                    private void calcuteVisitLength(long visitLength){
+                        if(visitLength>=1&&visitLength<=3){
+                            sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.TIME_PERIOD_1s_3s );
+                        }
+                        if(visitLength>=4&&visitLength<=6){
+                            sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.TIME_PERIOD_4s_6s );
+                        }
+                        if(visitLength>=7&&visitLength<=9){
+                            sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.TIME_PERIOD_7s_9s );
+                        }
+                        if(visitLength>=10&&visitLength<=30){
+                            sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.TIME_PERIOD_10s_30s );
+                        }
+                        if(visitLength>30&&visitLength<=60){
+                            sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.TIME_PERIOD_30s_60s );
+                        }
+                        if(visitLength>60&&visitLength<=180){
+                            sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.TIME_PERIOD_1m_3m );
+                        }
+                        if(visitLength>180&&visitLength<=600){
+                            sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.TIME_PERIOD_3m_10m );
+                        }
+                        if(visitLength>600&&visitLength<=1800){
+                            sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.TIME_PERIOD_10m_30m );
+                        }
+                        if(visitLength>1800){
+                            sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.TIME_PERIOD_30m );
+                        }
+                    }
+                    private void calcuteStepLength(long stepLength){
+                        if(stepLength>=1&&stepLength<=3){
+                            sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.STEP_PERIOD_1_3 );
+                        }
+                        if(stepLength>=4&&stepLength<=6){
+                            sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.STEP_PERIOD_4_6 );
+                        }
+                        if(stepLength>=7&&stepLength<=9){
+                            sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.STEP_PERIOD_7_9 );
+                        }
+                        if(stepLength>=10&&stepLength<=30){
+                            sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.STEP_PERIOD_10_30 );
+                        }
+                        if(stepLength>30&&stepLength<=60){
+                            sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.STEP_PERIOD_30_60 );
+                        }
+                        if(stepLength>60){
+                            sessionAggrStatAccumulator.add ( Constants.SESSION_PROJECT.STEP_PERIOD_60 );
+                        }
+
                     }
 
                 });
