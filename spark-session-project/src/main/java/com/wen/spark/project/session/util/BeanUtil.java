@@ -63,6 +63,12 @@ public class BeanUtil {
         return instance;
     }
 
-
+    public static  long getTaskId(int num){
+        StringBuffer sb=new StringBuffer (  );
+        for (int i=0;i<num;i++){
+            sb.append ( (int)(Math.random ()*10) );
+        }
+        return  Long.parseLong ( sb.toString () );
+    }
 
 }

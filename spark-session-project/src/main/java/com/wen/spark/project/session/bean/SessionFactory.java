@@ -143,12 +143,13 @@ public class SessionFactory {
                 name[i] = rsmd.getColumnName(i + 1);
             }
             List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
-            Map<String, Object> map = new HashMap<>();
-            while (rs.next()) {
+            Map<String, Object> map = null;
+            while (rs.next ()) {
+                map = new HashMap<> ();
                 for (int i = 0; i < count; i++) {
-                    map.put(name[i], rs.getObject(name[i]));
+                    map.put ( name[i], rs.getObject ( name[i] ) );
                 }
-                result.add(map);
+                result.add ( map );
             }
             return result;
         } catch (SQLException e) {

@@ -18,6 +18,8 @@
         <spark.version>2.2.1</spark.version>
         <java.version>1.8</java.version>
         <hadoop.version>2.9.0</hadoop.version>
+        <hive.version>2.2.0</hive.version>
+
 
     </properties>
 
@@ -63,6 +65,20 @@
             <artifactId>fastjson</artifactId>
             <version>1.2.44</version>
         </dependency>
+        <dependency>
+            <groupId>fastutil</groupId>
+            <artifactId>fastutil</artifactId>
+            <version>5.0.9</version>
+        </dependency>
+
+
+
+        <!--<dependency>-->
+            <!--<groupId>org.apache.hadoop</groupId>-->
+            <!--<artifactId>hadoop-common</artifactId>-->
+            <!--<version>${hadoop.version}</version>-->
+        <!--</dependency>-->
+
     </dependencies>
 
     <build>

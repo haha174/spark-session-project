@@ -60,6 +60,12 @@ public interface Constants {
         String STEP_PERIOD_30_60 = "30_60";
         String STEP_PERIOD_60 = "60";
 
+        String FIELD_CATEGORY_ID = "categoryid";
+        String FIELD_CLICK_COUNT = "clickCount";
+        String FIELD_ORDER_COUNT = "orderCount";
+        String FIELD_PAY_COUNT = "payCount";
+
+
     }
 
 

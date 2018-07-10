@@ -1,9 +1,6 @@
 package com.wen.spark.project.session.factory;
 
-import com.wen.spark.project.session.dao.ISessionAggrStatDAO;
-import com.wen.spark.project.session.dao.ITaskDAO;
-import com.wen.spark.project.session.dao.SessionAggrStatDAOImpl;
-import com.wen.spark.project.session.dao.TaskDAOImpl;
+import com.wen.spark.project.session.dao.*;
 
 /**
  * @author WChen129
@@ -21,5 +18,17 @@ public class DAOFactory {
     public static ISessionAggrStatDAO getSessionAggrStatDAO() {
         return new SessionAggrStatDAOImpl ();
     }
+    public static  ISessionRandomExtractDAO getSessionRandomExtractDAO(){
+	    return new SessionRandomExtractDAOImpl ();
+    }
+    public static ISessionDetailDAO getSessionDetailDAO(){
+	    return new SessionDetailDAOImpl ();
+    }
+    public static ITop10CategoryDAO getTop10CategoryDAO() {
+        return new Top10CategoryDAOImpl();
+    }
 
+//    public static ITop10SessionDAO getTop10SessionDAO() {
+//        return new Top10SessionDAOImpl();
+//    }
 }
