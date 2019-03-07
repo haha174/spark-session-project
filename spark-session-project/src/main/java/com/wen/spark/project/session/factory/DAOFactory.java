@@ -8,22 +8,27 @@ import com.wen.spark.project.session.dao.*;
  */
 public class DAOFactory {
 
-	/**
-	 * 获取任务管理DAO
-	 * @return DAO
-	 */
-	public static ITaskDAO getTaskDAO() {
-		return new TaskDAOImpl();
-	}
+    /**
+     * 获取任务管理DAO
+     *
+     * @return DAO
+     */
+    public static ITaskDAO getTaskDAO() {
+        return new TaskDAOImpl();
+    }
+
     public static ISessionAggrStatDAO getSessionAggrStatDAO() {
-        return new SessionAggrStatDAOImpl ();
+        return new SessionAggrStatDAOImpl();
     }
-    public static  ISessionRandomExtractDAO getSessionRandomExtractDAO(){
-	    return new SessionRandomExtractDAOImpl ();
+
+    public static ISessionRandomExtractDAO getSessionRandomExtractDAO() {
+        return new SessionRandomExtractDAOImpl();
     }
-    public static ISessionDetailDAO getSessionDetailDAO(){
-	    return new SessionDetailDAOImpl ();
+
+    public static ISessionDetailDAO getSessionDetailDAO() {
+        return new SessionDetailDAOImpl();
     }
+
     public static ITop10CategoryDAO getTop10CategoryDAO() {
         return new Top10CategoryDAOImpl();
     }
